@@ -1,7 +1,11 @@
-const fs = require("fs-extra");
-const path = require("path");
-const { spawnSync } = require("child_process");
-const { getProjectPaths } = require("./utils");
+import fs from "./fs.mjs";
+import path from "path";
+import { spawnSync } from "child_process";
+import { getProjectPaths } from "./utils.mjs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function renderPageComponent() {
   return `export default function PageRenderer({ page }) {
@@ -81,7 +85,7 @@ export default function RootLayout({ children }) {
 async function main() {
   const websiteUrl = process.argv[2];
   if (!websiteUrl) {
-    console.error("Usage: node scripts/buildFrontend.js <website_url>");
+    console.error("Usage: node scripts/buildFrontend.mjs <website_url>");
     process.exit(1);
   }
 

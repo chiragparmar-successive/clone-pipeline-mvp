@@ -1,23 +1,20 @@
 {
   "name": "website-builder-skill",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "index.mjs",
   "scripts": {
-    "crawl": "node scripts/crawl.js",
-    "parse": "node scripts/parseHtml.js",
-    "detect": "node scripts/detectComponents.js",
-    "normalize": "node scripts/normalizeComponents.js",
-    "schema": "node scripts/generateSchema.js",
-    "build:strapi": "node scripts/buildStrapi.js",
-    "build:frontend": "node scripts/buildFrontend.js"
+    "crawl": "node scripts/crawl.mjs",
+    "parse": "node scripts/parseHtml.mjs",
+    "detect": "node scripts/detectComponents.mjs",
+    "normalize": "node scripts/normalizeComponents.mjs",
+    "schema": "node scripts/generateSchema.mjs",
+    "build:strapi": "node scripts/buildStrapi.mjs",
+    "build:frontend": "node scripts/buildFrontend.mjs"
   },
   "dependencies": {
-    "axios": "^1.15.2",
     "cheerio": "^1.1.2",
-    "fast-xml-parser": "^5.7.2",
-    "fs-extra": "^11.3.4",
+    "fast-xml-parser": "^4.5.6",
     "p-limit": "^3.1.0",
-    "playwright": "^1.59.1",
-    "slugify": "^1.6.9"
+    "playwright": "^1.59.1"
   }
 }

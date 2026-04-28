@@ -18,7 +18,7 @@ Translate normalized components into Strapi component schemas and page content-t
 
 Run:
 
-`node scripts/generateSchema.js {{website_url}}`
+`node scripts/generateSchema.mjs {{website_url}}`
 
 ## Quality Gates
 

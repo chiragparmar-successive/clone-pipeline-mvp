@@ -11,7 +11,7 @@ Generate a fully bootstrapped, runnable Strapi project and inject generated sche
 ### Execution
 Run:
 
-`node scripts/buildStrapi.js {{website_url}}`
+`node scripts/buildStrapi.mjs {{website_url}}`
 
 ### Output
 - `output/<site>/cms/`

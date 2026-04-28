@@ -5,7 +5,7 @@ Guarantee robust frontend-to-CMS API wiring for development and degraded network
 
 ## Inputs
 - `website_url`
-- `output/<site>/frontend/lib/strapi.js`
+- `output/<site>/frontend/lib/strapi.mjs`
 - `output/<site>/cms/`
 
 ## Checks

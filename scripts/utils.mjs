@@ -1,9 +1,19 @@
-const slugify = require("slugify");
-const path = require("path");
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+function toSlug(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 function getSiteName(url) {
   const domain = new URL(url).hostname;
-  return slugify(domain, { lower: true });
+  return toSlug(domain);
 }
 
 function inferFieldType(prop) {
@@ -47,7 +57,7 @@ function getProjectPaths(websiteUrl) {
   };
 }
 
-module.exports = {
+export {
   getSiteName,
   inferFieldType,
   getProjectPaths,

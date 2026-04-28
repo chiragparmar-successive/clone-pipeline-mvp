@@ -19,7 +19,7 @@ Discover and crawl all in-scope pages from the target site, then persist determi
 
 Run:
 
-`node scripts/crawl.js {{website_url}} {{sitemap_url_optional}}`
+`node scripts/crawl.mjs {{website_url}} {{sitemap_url_optional}}`
 
 ## Validation Checklist
 

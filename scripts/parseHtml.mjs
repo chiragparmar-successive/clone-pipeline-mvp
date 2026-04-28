@@ -1,6 +1,10 @@
-const fs = require("fs-extra");
-const path = require("path");
-const { getProjectPaths } = require("./utils");
+import fs from "./fs.mjs";
+import path from "path";
+import { getProjectPaths } from "./utils.mjs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function cleanHtml(html) {
   return (
@@ -24,7 +28,7 @@ async function main() {
   const websiteUrl = process.argv[2];
 
   if (!websiteUrl) {
-    console.error("Usage: node parseHtml.js <website_url>");
+    console.error("Usage: node parseHtml.mjs <website_url>");
     process.exit(1);
   }
 

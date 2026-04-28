@@ -1,6 +1,10 @@
-const fs = require("fs-extra");
-const path = require("path");
-const { inferFieldType, getProjectPaths } = require("./utils");
+import fs from "./fs.mjs";
+import path from "path";
+import { inferFieldType, getProjectPaths } from "./utils.mjs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function buildStrapiAttributes(props) {
   const attributes = {};
@@ -13,7 +17,7 @@ function buildStrapiAttributes(props) {
 async function main() {
   const websiteUrl = process.argv[2];
   if (!websiteUrl) {
-    console.error("Usage: node scripts/generateSchema.js <website_url>");
+    console.error("Usage: node scripts/generateSchema.mjs <website_url>");
     process.exit(1);
   }
 

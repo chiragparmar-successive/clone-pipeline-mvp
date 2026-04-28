@@ -1,7 +1,11 @@
-const fs = require("fs-extra");
-const path = require("path");
-const cheerio = require("cheerio");
-const { getProjectPaths } = require("./utils");
+import fs from "./fs.mjs";
+import * as cheerio from "cheerio";
+import path from "path";
+import { getProjectPaths } from "./utils.mjs";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 function detectType(tagName, className = "", id = "") {
   const label = `${tagName} ${className} ${id}`.toLowerCase();
@@ -50,7 +54,7 @@ async function main() {
   const websiteUrl = process.argv[2];
 
   if (!websiteUrl) {
-    console.error("Usage: node detectComponents.js <website_url>");
+    console.error("Usage: node detectComponents.mjs <website_url>");
     process.exit(1);
   }
 

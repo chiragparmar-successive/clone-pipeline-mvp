@@ -17,7 +17,7 @@ Transform crawled raw HTML into sanitized, analysis-friendly page snapshots.
 
 Run:
 
-`node scripts/parseHtml.js {{website_url}}`
+`node scripts/parseHtml.mjs {{website_url}}`
 
 ## Quality Checks
 

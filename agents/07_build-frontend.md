@@ -10,14 +10,14 @@ Generate a fully bootstrapped Next.js app with resilient Strapi data integration
 ## Execution
 Run:
 
-`node scripts/buildFrontend.js {{website_url}}`
+`node scripts/buildFrontend.mjs {{website_url}}`
 
 ## Output
 - `output/<site>/frontend/`
-  - `app/layout.js`
-  - `app/page.js`
-  - `lib/strapi.js`
-  - `components/PageRenderer.js`
+  - `app/layout.mjs`
+  - `app/page.mjs`
+  - `lib/strapi.mjs`
+  - `components/PageRenderer.mjs`
   - bootstrapped Next.js app files
 
 ## Quality Gates
