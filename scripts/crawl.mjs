@@ -144,6 +144,30 @@ async function scrollToLoadFullPage(page) {
 
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+    const isScrollable = (el) => {
+      if (!el) return false;
+      const style = window.getComputedStyle(el);
+      const overflowY = style.overflowY;
+      return (
+        (overflowY === "auto" || overflowY === "scroll") &&
+        el.scrollHeight - el.clientHeight > 120
+      );
+    };
+
+    const scrollElementSlowly = async (el) => {
+      const step = Math.max(180, Math.floor((el.clientHeight || window.innerHeight) * 0.65));
+      let y = 0;
+      while (y < el.scrollHeight) {
+        el.scrollTo(0, y);
+        y += step;
+        await sleep(90);
+      }
+      el.scrollTo(0, el.scrollHeight);
+      await sleep(150);
+      el.scrollTo(0, 0);
+      await sleep(80);
+    };
+
     let previousHeight = 0;
     let stableRounds = 0;
 
@@ -171,6 +195,17 @@ async function scrollToLoadFullPage(page) {
       previousHeight = newHeight;
 
       if (stableRounds >= 2) break;
+    }
+
+    // Some apps render main content in an inner scroll container instead of body.
+    const allNodes = Array.from(document.querySelectorAll("*"));
+    const scrollContainers = allNodes
+      .filter(isScrollable)
+      .sort((a, b) => b.scrollHeight - a.scrollHeight)
+      .slice(0, 8);
+
+    for (const container of scrollContainers) {
+      await scrollElementSlowly(container);
     }
 
     // Ensure lazy images/videos have one more chance to resolve.
@@ -202,6 +237,27 @@ async function scrollToLoadFullPage(page) {
   });
 }
 
+async function captureTrulyFullPageScreenshot(page, targetPath) {
+  const client = await page.context().newCDPSession(page);
+  const metrics = await client.send("Page.getLayoutMetrics");
+  const contentWidth = Math.ceil(metrics.contentSize.width);
+  const contentHeight = Math.ceil(metrics.contentSize.height);
+
+  await client.send("Page.captureScreenshot", {
+    format: "png",
+    captureBeyondViewport: true,
+    clip: {
+      x: 0,
+      y: 0,
+      width: contentWidth,
+      height: contentHeight,
+      scale: 1,
+    },
+  }).then(async ({ data }) => {
+    await fs.outputFile(targetPath, Buffer.from(data, "base64"));
+  });
+}
+
 async function captureScreenshots(page, screenshotDir, slug) {
   const screenshotPaths = {};
   for (const viewport of VIEWPORTS) {
@@ -213,7 +269,7 @@ async function captureScreenshots(page, screenshotDir, slug) {
       viewport.name,
       `${slug}.png`,
     );
-    await page.screenshot({ path: targetPath, fullPage: true });
+    await captureTrulyFullPageScreenshot(page, targetPath);
     screenshotPaths[viewport.name] = targetPath;
   }
   return screenshotPaths;

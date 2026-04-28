@@ -18,6 +18,10 @@ async function writeJson(filePath, data, options = {}) {
 
 async function outputFile(filePath, content) {
   await ensureDir(path.dirname(filePath));
+  if (Buffer.isBuffer(content) || content instanceof Uint8Array) {
+    await fs.writeFile(filePath, content);
+    return;
+  }
   await fs.writeFile(filePath, content, "utf8");
 }
 

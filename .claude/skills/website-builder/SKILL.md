@@ -83,56 +83,34 @@ Run:
 Required artifacts:
 - `docs/parsed-html/*.html`
 
-### Phase 3: Detect Components
+### Phase 3: Build CMS via AI Agent (No script)
 
 Run:
-- `node scripts/detectComponents.mjs <website_url>`
+- Use AI agent with extracted artifacts in `docs/`
+- Use exact CMS prompt file `prompts/build-cms.txt`
 
 Required artifacts:
-- `docs/components.json`
+- `cms/` runnable Strapi app
+- page content-type generated directly from extracted artifacts
+- `seed/pages.json` generated from crawl + parsed HTML outputs
 
-### Phase 4: Normalize Components
+### Phase 4: Build Frontend via AI Agent (No script)
 
 Run:
-- `node scripts/normalizeComponents.mjs <website_url>`
+- Use AI agent with exact prompt file `prompts/build-frontend.txt`
 
 Required artifacts:
-- `docs/normalized.json`
+- `frontend/` runnable Next.js app
+- API client + renderer wiring for direct page payloads
 
-### Phase 5: Generate CMS Schema
-
-Run:
-- `node scripts/generateSchema.mjs <website_url>`
-
-Required artifacts:
-- `docs/schema.json`
-
-### Phase 6: Build CMS
-
-Run:
-- `node scripts/buildStrapi.mjs <website_url>`
-
-Required artifacts:
-- `cms/` bootstrapped Strapi app
-- generated schemas + seed files
-
-### Phase 7: Build Frontend
-
-Run:
-- `node scripts/buildFrontend.mjs <website_url>`
-
-Required artifacts:
-- `frontend/` bootstrapped Next.js app
-- API client + renderer wiring
-
-### Phase 8: Integration Validation
+### Phase 5: Integration Validation
 
 Validate:
 - env contract (`NEXT_PUBLIC_STRAPI_URL`)
 - endpoint contract (`GET /api/pages`)
 - graceful fallback behavior for CMS downtime
 
-### Phase 9: Auto-Fix Loop
+### Phase 6: Auto-Fix Loop
 
 Apply deterministic fixes for known failures and rerun impacted checks.
 
@@ -141,7 +119,6 @@ Apply deterministic fixes for known failures and rerun impacted checks.
 - `docs/pages.json` exists and has at least one successfully crawled page.
 - desktop + mobile screenshots exist for crawled pages.
 - `docs/parsed-html/` exists.
-- `docs/components.json`, `docs/normalized.json`, `docs/schema.json` are valid JSON.
 - `cms` is a real bootstrapped app (not partial scaffold).
 - `frontend` is a real bootstrapped app (not partial scaffold).
 - frontend fetch logic is fail-safe (no hard crash if CMS unavailable).
@@ -151,7 +128,6 @@ Apply deterministic fixes for known failures and rerun impacted checks.
 - Hard fail on:
   - missing required input
   - crawl producing zero usable pages
-  - schema generation failure
   - frontend/cms generation failure
 - Soft fail (warning + continue if recoverable):
   - sitemap URL unavailable (fallback to homepage discovery)
