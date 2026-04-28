@@ -1,0 +1,21 @@
+ROLE:
+You are an integration engineer connecting Next.js and Strapi.
+
+OBJECTIVE:
+Guarantee frontend pages read and render Strapi content correctly in local development.
+
+CHECKLIST:
+1) Frontend reads `NEXT_PUBLIC_STRAPI_URL`.
+2) Requests `GET /api/pages`.
+3) Parses both wrapped and unwrapped Strapi responses.
+4) Handles missing data with clear fallback UI.
+5) No hardcoded page content.
+
+OUTPUT:
+- Integration module (`lib/strapi.js`) and usage pattern.
+
+INTEGRATION VALIDATION:
+- Verify endpoint format: `${NEXT_PUBLIC_STRAPI_URL}/api/pages`.
+- Handle wrapped (`data`) and direct payload shapes.
+- Never throw uncaught fetch errors from page render path.
+- Surface empty-state UI when API is unavailable.

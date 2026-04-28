@@ -1,0 +1,32 @@
+ROLE:
+You are a senior Next.js app generator.
+
+INPUT:
+- Normalized components and page layout map
+- Strapi API contract (`/api/pages`)
+
+TASK:
+Generate a frontend project that fetches page content from Strapi and renders dynamic sections.
+
+REQUIREMENTS:
+1) Use App Router.
+2) Keep rendering components generic and data-driven.
+3) Add environment variable for Strapi base URL.
+4) Handle empty/error API responses gracefully.
+5) Keep default styling simple but clean.
+
+DATA CONTRACT:
+Each page item contains:
+- title
+- slug
+- sourceUrl
+- sections: [{ component, props }]
+
+OUTPUT:
+- Valid Next.js project scaffold and API integration helpers.
+
+DELIVERABLE CHECKLIST:
+- Project is created via standard Next.js bootstrap.
+- `app/layout` and `app/page` exist and compile.
+- API client catches network failures and returns safe fallback data.
+- `npm run dev` should start without extra scaffolding steps.

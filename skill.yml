@@ -1,0 +1,56 @@
+name: website-builder-skill
+description: >
+  End-to-end website reconstruction pipeline that converts a source website URL
+  (with optional sitemap) into runnable Next.js frontend + Strapi CMS projects,
+  including intermediary docs artifacts and API integration contracts.
+entrypoint: skill.yml
+version: 1
+
+inputs:
+  website_url:
+    type: string
+    required: true
+    description: Canonical website URL to reverse-engineer.
+  sitemap_url:
+    type: string
+    required: false
+    description: Optional sitemap URL; crawler falls back to homepage link discovery.
+
+outputs:
+  docs:
+    path: output/<site>/docs
+    description: Crawl/parsing/component/schema artifacts used for build traceability.
+  frontend:
+    path: output/<site>/frontend
+    description: Fully bootstrapped runnable Next.js app.
+  cms:
+    path: output/<site>/cms
+    description: Fully bootstrapped runnable Strapi app.
+
+execution_contract:
+  - Validate input URL format before running any step.
+  - Treat each step as required unless auto-fix formally resolves a failure.
+  - Persist every step output before moving to the next step.
+  - Never silently skip a failed step; surface status and reason.
+  - Final result is success only if docs, frontend, and cms all exist and are runnable.
+
+quality_gates:
+  - crawl output contains pages.json with at least one successful page.
+  - parse-html creates parsed-html artifacts for crawled pages.
+  - detect-components and normalize-components produce valid JSON.
+  - schema generation produces valid Strapi component/content-type structures.
+  - cms project starts with npm run develop.
+  - frontend project starts with npm run dev.
+  - frontend handles CMS-unavailable state without crashing.
+
+steps:
+  - crawl-site
+  - parse-html
+  - detect-components
+  - normalize-components
+  - generate-strapi-schema
+  - build-strapi
+  - build-frontend
+  - connect-api
+  - validate-site
+  - auto-fix

@@ -1,0 +1,71 @@
+ROLE:
+You are a principal Strapi architect.
+
+INPUT:
+{{NORMALIZED}}
+
+MISSION:
+Translate normalized design-system components into Strapi-ready component schemas and a page content type.
+
+SCHEMA DESIGN PRINCIPLES:
+1) Every reusable UI block becomes a Strapi component.
+2) Every website page becomes an entry in a `page` collection type.
+3) Keep field types practical and editable by non-technical content editors.
+4) Prefer clear names and stable contracts over over-modeling.
+
+TYPE MAPPING:
+- title, subtitle, heading, label, url, link, author -> string
+- description, body, content, answer, quote -> text
+- image, icon, logo -> media
+- isX/hasX/enabled -> boolean
+- items/list -> json
+
+REQUIRED OUTPUT KEYS:
+- components
+- contentTypes
+
+OUTPUT FORMAT (STRICT JSON):
+{
+  "components": {
+    "hero": {
+      "collectionName": "components_hero",
+      "info": { "displayName": "Hero" },
+      "attributes": {
+        "title": { "type": "string" },
+        "description": { "type": "text" },
+        "image": { "type": "media" }
+      }
+    }
+  },
+  "contentTypes": {
+    "page": {
+      "kind": "collectionType",
+      "collectionName": "pages",
+      "info": {
+        "singularName": "page",
+        "pluralName": "pages",
+        "displayName": "Page"
+      },
+      "options": {
+        "draftAndPublish": true
+      },
+      "attributes": {
+        "title": { "type": "string" },
+        "slug": { "type": "uid", "targetField": "title" },
+        "sourceUrl": { "type": "string" },
+        "sections": { "type": "json" }
+      }
+    }
+  }
+}
+
+OUTPUT RULES:
+- Return JSON only.
+- No markdown.
+- No prose.
+
+SCHEMA GUARANTEES:
+- Every field name must be snake-safe / key-safe.
+- `contentTypes.page.attributes.sections` must always exist as JSON.
+- Do not emit unknown Strapi attribute types.
+- Preserve component names in deterministic kebab-case.

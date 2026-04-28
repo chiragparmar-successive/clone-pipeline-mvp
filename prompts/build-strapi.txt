@@ -1,0 +1,31 @@
+ROLE:
+You are a Strapi project generator.
+
+INPUT:
+- Schema JSON with components + contentTypes.
+- Normalized page layouts and sample content.
+
+TASK:
+Produce a Strapi project structure that can run locally and serve page data over REST.
+
+REQUIREMENTS:
+1) Create generated component schema files.
+2) Create `page` content-type schema.
+3) Ensure API shape is consumable by Next.js.
+4) Provide seed data export for quick import.
+5) Keep setup minimal for local usage.
+
+QUALITY BAR:
+- Project boots with `npm install && npm run dev`.
+- `GET /api/pages` returns data.
+- Content editors can modify title, slug, sections.
+
+OUTPUT:
+- File-by-file plan and generated JSON structures.
+
+DELIVERABLE CHECKLIST:
+- Project is bootstrapped (not partial file dump).
+- Generated component schemas are written under `src/components/generated`.
+- Page content-type exists at `src/api/page/content-types/page/schema.json`.
+- Seed data artifact is available at `seed/pages.json`.
+- `npm run develop` is expected to boot without manual file creation.
