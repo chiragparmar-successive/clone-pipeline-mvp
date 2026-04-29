@@ -1,3 +1,11 @@
 node_modules/
-output/
-logs/
+
+# Generated output projects
+output/*/cms/node_modules/
+output/*/frontend/node_modules/
+output/*/cms/.cache/
+output/*/cms/build/
+output/*/cms/dist/
+output/*/cms/.tmp/
+output/*/frontend/.next/
+output/*/frontend/.turbo/
