@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "path": "/",
+      "pageType": "page",
+      "slug": "home",
+      "sections": [
+        { "key": "hero", "component": "sections.hero", "order": 1, "dataShape": ["headline", "subheadline", "ctaText", "ctaHref", "imageUrl"] },
+        { "key": "intro", "component": "sections.content-block", "order": 2, "dataShape": ["heading", "body", "alignment"] },
+        { "key": "value-prop", "component": "sections.content-block", "order": 3, "dataShape": ["heading", "body", "alignment"] },
+        { "key": "cta", "component": "sections.cta", "order": 4, "dataShape": ["heading", "body", "buttonText", "buttonHref"] }
+      ]
+    }
+  ]
+}

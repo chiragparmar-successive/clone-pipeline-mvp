@@ -1,0 +1,39 @@
+[
+  {
+    "title": "About TabiPass",
+    "slug": "home",
+    "seo": {
+      "metaTitle": "TabiPass — Private booking portal",
+      "metaDescription": "TabiPass is a private booking portal offering members access to curated hotels across Japan."
+    },
+    "sections": [
+      {
+        "__component": "sections.hero",
+        "headline": "Discover Japan, your way.",
+        "subheadline": "TabiPass is a private booking portal offering members exclusive access to curated hotels across Japan.",
+        "ctaText": "Member Login",
+        "ctaHref": "https://en.tabipass.jp/hotels/",
+        "imageUrl": "https://tabipass.jp/wp-content/uploads/2025/10/TabiPass_n.svg"
+      },
+      {
+        "__component": "sections.content-block",
+        "heading": "What is TabiPass?",
+        "body": "TabiPass is a members-only travel booking experience that connects discerning travelers with handpicked hotels and ryokans across Japan. Browse availability, secure private rates, and travel with confidence.",
+        "alignment": "left"
+      },
+      {
+        "__component": "sections.content-block",
+        "heading": "Curated stays. Trusted hosts.",
+        "body": "Every property is reviewed and vetted by the TabiPass team — from boutique hideaways in Kyoto to design-forward hotels in Tokyo. Members enjoy dedicated support, flexible cancellations, and a streamlined checkout.",
+        "alignment": "left"
+      },
+      {
+        "__component": "sections.cta",
+        "heading": "Ready to plan your next trip?",
+        "body": "Sign in to your member account to view live availability and book your stay.",
+        "buttonText": "Open Hotel List",
+        "buttonHref": "https://en.tabipass.jp/hotels/"
+      }
+    ]
+  }
+]

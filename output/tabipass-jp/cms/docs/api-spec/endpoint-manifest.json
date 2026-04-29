@@ -1,0 +1,21 @@
+{
+  "baseUrl": "http://localhost:1337",
+  "apiPrefix": "/api",
+  "primaryContent": {
+    "list": "/api/pages?populate[sections][populate]=*&populate[seo]=true",
+    "detailBySlug": "/api/pages?filters[slug][$eq]={slug}&populate[sections][populate]=*&populate[seo]=true"
+  },
+  "contentTypes": [
+    {
+      "name": "page",
+      "collection": "pages",
+      "listEndpoint": "/api/pages",
+      "singleEndpointPattern": "/api/pages/{id}",
+      "supportsSlugFilter": true
+    }
+  ],
+  "healthcheck": {
+    "admin": "/admin",
+    "api": "/api"
+  }
+}
