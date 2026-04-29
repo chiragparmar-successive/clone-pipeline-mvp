@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_sections_heroes",
+  "info": {
+    "displayName": "Hero",
+    "description": "Hero banner with headline and CTA"
+  },
+  "options": {},
+  "attributes": {
+    "headline": { "type": "string", "required": true },
+    "subheadline": { "type": "text" },
+    "ctaText": { "type": "string" },
+    "ctaHref": { "type": "string" },
+    "imageUrl": { "type": "string" }
+  }
+}

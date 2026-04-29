@@ -1,0 +1,14 @@
+{
+  "collectionName": "components_sections_ctas",
+  "info": {
+    "displayName": "Cta",
+    "description": "Call-to-action band"
+  },
+  "options": {},
+  "attributes": {
+    "heading": { "type": "string", "required": true },
+    "body": { "type": "text" },
+    "buttonText": { "type": "string" },
+    "buttonHref": { "type": "string" }
+  }
+}

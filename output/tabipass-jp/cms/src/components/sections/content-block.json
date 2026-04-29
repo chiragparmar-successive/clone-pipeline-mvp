@@ -1,0 +1,18 @@
+{
+  "collectionName": "components_sections_content_blocks",
+  "info": {
+    "displayName": "ContentBlock",
+    "description": "Heading + body copy block"
+  },
+  "options": {},
+  "attributes": {
+    "heading": { "type": "string" },
+    "body": { "type": "text" },
+    "imageUrl": { "type": "string" },
+    "alignment": {
+      "type": "enumeration",
+      "enum": ["left", "center", "right"],
+      "default": "left"
+    }
+  }
+}
