@@ -5,7 +5,9 @@
   "scripts": {
     "crawl": "node scripts/crawl.mjs",
     "parse": "node scripts/parseHtml.mjs",
-    "pipeline": "node scripts/pipeline.mjs"
+    "pipeline": "node scripts/pipeline.mjs",
+    "tests:generate": "node scripts/generate-test-cases.mjs",
+    "playwright:regression": "node scripts/playwright-regression.mjs"
   },
   "dependencies": {
     "@strapi/plugin-users-permissions": "^5.43.0",

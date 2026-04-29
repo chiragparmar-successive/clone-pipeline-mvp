@@ -39,6 +39,7 @@ async function validateOutputs(projectPaths) {
   );
   const mobileShots = await listFiles(`${projectPaths.screenshotDir}/mobile`);
   const parsedHtml = await listFiles(projectPaths.parsedHtmlDir);
+  const aiTests = await listFiles(`${projectPaths.docsDir}/ai-tests`);
 
   if (!desktopShots.length || !mobileShots.length) {
     throw new Error("Missing desktop/mobile screenshots");
@@ -48,12 +49,17 @@ async function validateOutputs(projectPaths) {
     throw new Error("Parsed HTML directory is empty");
   }
 
+  if (!aiTests.includes("test-cases.json")) {
+    throw new Error("AI test cases were not generated");
+  }
+
   return {
     totalPages: pages.length,
     usablePages: usablePages.length,
     parsedPages: parsedHtml.length,
     desktopScreenshots: desktopShots.length,
     mobileScreenshots: mobileShots.length,
+    aiTestsGenerated: true,
   };
 }
 
@@ -78,7 +84,10 @@ async function main() {
   console.log("Phase 2: parse html");
   await runStep("node", ["scripts/parseHtml.mjs", websiteUrl]);
 
-  console.log("Phase 3: validate docs artifacts");
+  console.log("Phase 3: generate test cases");
+  await runStep("node", ["scripts/generate-test-cases.mjs", websiteUrl]);
+
+  console.log("Phase 4: validate docs artifacts");
   const stats = await validateOutputs(projectPaths);
 
   console.log("Pipeline checks passed");

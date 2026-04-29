@@ -9,6 +9,22 @@ user-invocable: true
 
 You are about to reverse-engineer and rebuild the site defined by **$ARGUMENTS** as a pixel-perfect multi-page clone.
 
+## Claude Agent Execution Protocol
+
+Follow these rules to maximize advanced Claude capabilities:
+
+1. Treat this prompt as a strict contract with phase gates, not as optional guidance.
+2. Work artifact-first: reuse existing docs/screenshots/html before any live fetch.
+3. Delegate only bounded, testable tasks to parallel agents (component-level or fix-level), never entire-site generation in one handoff.
+4. For every delegated task, provide:
+   - exact target file paths
+   - exact artifact inputs
+   - explicit verification command(s)
+   - required structured return format
+5. Merge incrementally and verify after each merge (`npx tsc --noEmit`, `npm run build`, runtime smoke checks).
+6. Keep a written decision trail for non-obvious choices (route mapping, endpoint mapping, behavior interpretation).
+7. Never mark completion until runtime + Playwright regression gates pass.
+
 This skill requires one argument and accepts an optional second argument:
 
 - `$ARGUMENTS[0]` = Canonical page URL on the target site (used as origin and baseline)
@@ -171,6 +187,24 @@ Every builder agent must verify `npx tsc --noEmit` passes before finishing. Afte
 ### 10. Next.js Best Practices Are Mandatory
 
 Treat performance, static generation, and SEO as first-class requirements for every cloned page. By default, prefer Server Components, statically generated routes, and metadata-driven SEO. Only opt into client-side rendering or dynamic behavior when interaction requirements force it.
+
+## Phase 0: Generate Test Cases From Input URL (Required)
+
+Before writing or changing frontend code, generate and store test cases from the source URL for Playwright execution.
+
+Create under `output/<site>/docs/ai-tests/`:
+
+- `test-cases.json`
+
+Minimum expectations:
+
+- Tests are generated from source URL + crawl artifacts + screenshots (not handwritten generic checks).
+- Cover per-route structure, visible content, key interactions, media presence, and section ordering.
+- Include severity labels (`critical`, `major`, `minor`) and clear pass/fail criteria.
+- Include at least one list-page and one detail-page route when available.
+
+Hard rule:
+- Do not proceed to component generation until baseline test cases are saved.
 
 ## Phase 1: Reconnaissance
 
@@ -603,6 +637,32 @@ After assembly, do NOT declare the clone complete. Take side-by-side comparison 
 
 Only after this visual QA pass across all sitemap pages is the clone complete.
 
+## Phase 6: Run Playwright Tests On Output Frontend (Required)
+
+After frontend implementation is complete, run stored test cases on output frontend (and compare with source URL):
+
+1. Source website (baseline re-check)
+2. Generated output frontend
+
+Then compare both runs and produce:
+
+- `output/<site>/docs/ai-tests/output-run.json`
+- `output/<site>/docs/ai-tests/comparison-report.json`
+- `output/<site>/docs/ai-tests/comparison-report.md`
+
+Comparison requirements:
+
+- Compute per-test status deltas (`same`, `regressed`, `improved`).
+- Highlight all `critical` and `major` regressions with route + component context.
+- Include actionable fix recommendations for each regression.
+
+Hard rule:
+- Do not declare completion while any `critical` regression remains unresolved.
+
+Run command:
+
+`npm run playwright:regression -- <source_url> <output_url> output/<site>/docs/ai-tests/test-cases.json output/<site>/docs/ai-tests`
+
 ## Next.js Static Generation and SEO Checklist
 
 Apply this checklist across all routes in `output/<site>/frontend/`:
@@ -788,6 +848,8 @@ Before completion, verify all:
 - [ ] Endpoint mapping file exists and matches live CMS routes
 - [ ] `section-map.json` is consumed and route section order matches CMS contract
 - [ ] Per-route section components exist (no single giant JSX file rendering all sections inline)
+- [ ] Playwright test cases exist at `docs/ai-tests/test-cases.json`
+- [ ] Playwright comparison report exists and all `critical` tests pass
 
 ## Pre-Dispatch Checklist
 
@@ -834,6 +896,7 @@ When done, report:
 - Total assets downloaded (images, videos, SVGs, fonts)
 - Build status (`npm run build` result)
 - Visual QA results by page (any remaining discrepancies)
+- Playwright regression summary (`critical`/`major`/`minor` pass rates + regressions)
 - Project output path (`output/<site>/frontend/`)
 - Any known gaps or limitations
 
@@ -860,7 +923,12 @@ Required execution sequence:
    - Confirm data-bound sections render
    - Confirm offline/error fallback still works if CMS is temporarily unavailable
 
-4. If ANY error occurs (build error, startup error, runtime error, API error):
+4. Execute Playwright regression tests against output frontend using stored baseline.
+   - Run test cases from `docs/ai-tests/test-cases.json`
+   - Compare with `docs/ai-tests/source-baseline.json`
+   - Save final reports in `docs/ai-tests/comparison-report.json` and `.md`
+
+5. If ANY error occurs (build error, startup error, runtime error, API error, critical Playwright regression):
    - Diagnose root cause from logs
    - Apply fix
    - Restart impacted service(s)
@@ -871,6 +939,7 @@ Hard rule:
 - Never stop at "build passed". Success requires both servers running and integration verified.
 - Never declare completion while unresolved runtime/server errors remain.
 - Never declare completion if frontend is mostly monolithic pages with no reusable section components.
+- Never declare completion while unresolved `critical` Playwright regressions remain.
 
 ## Frontend Architecture Hard Gate (Do Not Skip)
 

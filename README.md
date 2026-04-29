@@ -42,6 +42,14 @@ Run crawl + parse + docs validation directly:
 
 `npm run pipeline -- https://example.com https://example.com/sitemap.xml`
 
+Generate Playwright test cases from artifacts:
+
+`npm run tests:generate -- https://example.com`
+
+Run Playwright regression after frontend is built/running:
+
+`npm run playwright:regression -- https://example.com http://localhost:3000 output/<site>/docs/ai-tests/test-cases.json output/<site>/docs/ai-tests`
+
 ## Output Folder
 
 Generated files are placed in:
@@ -72,3 +80,13 @@ Next.js:
 - If sitemap is missing or invalid, crawler falls back to homepage internal-link discovery.
 - Frontend uses `NEXT_PUBLIC_STRAPI_URL` and gracefully handles empty API responses.
 - Local skill command is `/website-builder` from `.claude/skills/website-builder/SKILL.md`.
+
+## Simple Quality Flow
+
+1. Create test cases from input URL artifacts:
+   - `npm run tests:generate -- https://example.com`
+2. Build CMS + frontend.
+3. Run Playwright comparison on output frontend:
+   - `npm run playwright:regression -- https://example.com http://localhost:3000 output/<site>/docs/ai-tests/test-cases.json output/<site>/docs/ai-tests`
+
+Only mark complete when critical Playwright checks pass.

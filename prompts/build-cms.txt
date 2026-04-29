@@ -9,6 +9,22 @@ user-invocable: true
 
 You are about to reverse-engineer and rebuild the content structure of the site defined by **$ARGUMENTS** as a complete Strapi headless CMS running in `output/<site>/cms` where `<site>` is a stable slug from the website name/hostname.
 
+## Claude Agent Execution Protocol
+
+Follow these rules to maximize advanced Claude capabilities:
+
+1. Treat this prompt as a strict contract with phase gates, not as optional guidance.
+2. Work artifact-first: reuse existing docs/screenshots/html before any live fetch.
+3. Delegate only bounded, testable tasks to parallel agents (single model/domain slice/fix scope), never full CMS generation in one handoff.
+4. For every delegated task, provide:
+   - exact target file paths
+   - exact artifact inputs
+   - explicit verification command(s)
+   - required structured return format
+5. Merge incrementally and verify after each merge (`npx tsc --noEmit`, `npm run build`, runtime API smoke checks).
+6. Keep a written decision trail for non-obvious schema choices (normalization, relations, section contracts, endpoint names).
+7. Never mark completion until runtime + API contract gates pass.
+
 This skill requires one argument and accepts an optional second argument:
 
 - `$ARGUMENTS[0]` = Canonical page URL on the target site (used as origin and baseline)
