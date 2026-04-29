@@ -40,6 +40,7 @@ export default {
   outputFile,
   outputJson,
   remove,
+  readdir: fs.readdir.bind(fs),
   readFile: fs.readFile.bind(fs),
   writeFile: fs.writeFile.bind(fs),
 };

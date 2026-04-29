@@ -1,13 +1,13 @@
 ---
 name: cms-generator
-description: Reverse-engineer content models from a live website and generate Strapi schema definitions plus corresponding React/Next.js UI components. Extracts content structure, relationships, and metadata from one page URL plus an optional sitemap, then initializes a Strapi project with fully-configured content types and starter components. Use this when you want to scaffold a headless CMS setup from an existing website. Requires one argument (target URL) and accepts an optional second argument (sitemap URL).
+description: Reverse-engineer content models from a live website and generate Strapi schema definitions. Extracts content structure, relationships, and metadata from one page URL plus an optional sitemap, then initializes a Strapi project with fully-configured content types and starter content. Use this when you want to scaffold a headless CMS setup from an existing website. Requires one argument (target URL) and accepts an optional second argument (sitemap URL).
 argument-hint: "<url> [sitemap-url]"
 user-invocable: true
 ---
 
 # Strapi Schema Generator
 
-You are about to reverse-engineer and rebuild the content structure of the site defined by **$ARGUMENTS** as a complete Strapi headless CMS running in the `/cms` folder.
+You are about to reverse-engineer and rebuild the content structure of the site defined by **$ARGUMENTS** as a complete Strapi headless CMS running in `output/<site>/cms` where `<site>` is a stable slug from the website name/hostname.
 
 This skill requires one argument and accepts an optional second argument:
 
@@ -25,8 +25,8 @@ Execution contract:
 4. Remove duplicates, query-tracking variants, and non-HTML/document links
 5. Analyze EACH page to extract content structure, data types, and relationships
 6. Design a normalized Strapi content model that maps site content to reusable collection types and single types
-7. Initialize a Strapi boilerplate in `/cms` with full TypeScript configuration
-8. Create Content-Type Definition (CTD) files for every identified content type in `/cms/src/api/`
+7. Initialize a Strapi boilerplate in `output/<site>/cms` with full TypeScript configuration
+8. Create Content-Type Definition (CTD) files for every identified content type in `output/<site>/cms/src/api/`
 9. Populate seed data/demo content for testing the CMS
 10. Document the schema and API structure
 11. Verify the CMS is fully operational with a running development server
@@ -36,7 +36,7 @@ This is not a simple data dump. You are a **content architect** — as you inspe
 ## What Gets Created
 
 ```
-/cms                           # Strapi headless CMS boilerplate
+output/<site>/cms             # Strapi headless CMS boilerplate
 ├── src/
 │   ├── api/                   # Auto-generated content types
 │   ├── config/                # Server, plugins, middleware
@@ -53,7 +53,7 @@ REST API:     http://localhost:1337/api
 GraphQL:      http://localhost:1337/graphql
 ```
 
-After `/cms` is set up, you can optionally create a separate frontend project elsewhere that consumes the API.
+After `output/<site>/cms` is set up, expose stable API contracts for whichever frontend is managed separately.
 
 ## Scope Defaults
 
@@ -61,9 +61,8 @@ The target scope is all in-scope pages discovered from `$ARGUMENTS[1]` when prov
 
 - **Content extraction:** All text, media, relationships, and structured data visible on pages
 - **Data modeling:** Normalized Strapi collection types (reusable content models) plus single types (unique pages like homepage, about)
-- **Component generation:** React/Next.js components with TypeScript that fetch and render from Strapi API
+- **Component generation:** Strapi content components and schemas only (no frontend scaffold)
 - **Backend:** Strapi v4+ with SQLite (development) and PostgreSQL configuration template
-- **Frontend:** Next.js 14+ with App Router, TypeScript, and API route integration
 - **In scope:** Content structure, data relationships, taxonomy, media assets
 - **Out of scope:** User authentication (initially), real database data population, payment integration
 
@@ -71,7 +70,7 @@ If the user provides additional instructions (custom fields, specific integratio
 
 ## Pre-Flight
 
-1. **Browser automation is required.** Check for available browser MCP tools (Chrome MCP, Playwright MCP, Browserbase MCP, Puppeteer MCP, etc.). Use whichever is available — if multiple exist, prefer Chrome MCP. If none are detected, ask the user which browser tool they have and how to connect it. This skill cannot work without browser automation.
+1. **Browser automation is preferred, artifact-first execution is required.** Reuse existing artifacts in `output/<site>/docs/` first (`pages.json`, raw HTML, parsed HTML, desktop/mobile screenshots). If artifacts are missing or stale, use available browser tooling (MCP browser tools or local Playwright scripts) to refresh only the missing pieces. Do not fail solely because browser MCP is unavailable when artifacts are sufficient.
 
 2. Validate arguments strictly:
    - `$ARGUMENTS[0]` must be a valid URL
@@ -79,10 +78,10 @@ If the user provides additional instructions (custom fields, specific integratio
    - `$ARGUMENTS[0]` must be reachable via browser MCP; `$ARGUMENTS[1]` must be reachable only if provided
    - If sitemap URLs are used, sitemap pages must resolve to the same hostname as `$ARGUMENTS[0]` unless user explicitly allows cross-domain pages
 
-3. Create a NEW Strapi boilerplate in `/cms`:
+3. Use a Strapi boilerplate in `output/<site>/cms`:
 
    ```
-   /cms
+   output/<site>/cms
    ├── src/
    │   ├── api/                   # Content types & routes (empty, will be populated)
    │   ├── components/            # Reusable Strapi components (empty, will be populated)
@@ -103,17 +102,17 @@ If the user provides additional instructions (custom fields, specific integratio
    └── .gitignore
    ```
 
-4. Initialize Strapi boilerplate:
+4. Initialize Strapi boilerplate when missing:
 
    ```bash
-   cd /cms
+   cd output/<site>/cms
    npx create-strapi-app@latest . --typescript --quickstart
    ```
 
-5. Create documentation structure inside `/cms`:
+5. Create documentation structure inside `output/<site>/cms` (create if missing, update if existing):
 
    ```
-   /cms
+   output/<site>/cms
    ├── docs/
    │   ├── research/
    │   │   ├── CONTENT-STRUCTURE.md
@@ -137,7 +136,7 @@ If the user provides additional instructions (custom fields, specific integratio
    npm run build
    ```
 
-   Set `/cms` as the working directory for all subsequent commands, files, docs, and scripts.
+   Set `output/<site>/cms` as the working directory for all subsequent commands, files, docs, and scripts.
 
 ## Guiding Principles
 
@@ -898,12 +897,12 @@ Initialize Strapi boilerplate and establish configuration.
 
 ### Strapi Boilerplate Setup
 
-In `/cms/`:
+In `output/<site>/cms/`:
 
 1. **Strapi is already installed** (via create-strapi-app):
 
    ```bash
-   cd /cms
+   cd output/<site>/cms
    npm install
    npm run build
    ```
@@ -935,7 +934,7 @@ In `/cms/`:
    └── category/
    ```
 
-4. **Environment configuration** (`/cms/.env`):
+4. **Environment configuration** (`output/<site>/cms/.env`):
 
    ```env
    # Server
@@ -958,7 +957,7 @@ In `/cms/`:
    DATABASE_PASSWORD=strapi
    ```
 
-5. **Strapi plugins configuration** (`/cms/src/config/plugins.ts`):
+5. **Strapi plugins configuration** (`output/<site>/cms/src/config/plugins.ts`):
 
    ```typescript
    export default {
@@ -998,7 +997,7 @@ In `/cms/`:
    };
    ```
 
-6. **Middleware for CORS** (`/cms/src/config/middlewares.ts`):
+6. **Middleware for CORS** (`output/<site>/cms/src/config/middlewares.ts`):
 
    ```typescript
    export default [
@@ -1014,7 +1013,7 @@ In `/cms/`:
    ];
    ```
 
-7. **Server configuration** (`/cms/src/config/server.ts`):
+7. **Server configuration** (`output/<site>/cms/src/config/server.ts`):
    ```typescript
    export default ({ env }) => ({
      host: env("HOST", "0.0.0.0"),
@@ -1033,21 +1032,21 @@ In `/cms/`:
 Build Strapi:
 
 ```bash
-cd /cms
+cd output/<site>/cms
 npm run build
 ```
 
 Should report success with no TypeScript errors.
 
-**Set `/cms` as working directory for all subsequent operations.**
+**Set `output/<site>/cms` as working directory for all subsequent operations.**
 
 ## Phase 4: Content Type Implementation
 
-For each type in the content model spec, create Strapi schema files in `/cms/`.
+For each type in the content model spec, create Strapi schema files in `output/<site>/cms/`.
 
 ### BlogPost Implementation
 
-Create `/cms/src/api/blog-post/content-types/blog-post/schema.json`:
+Create `output/<site>/cms/src/api/blog-post/content-types/blog-post/schema.json`:
 
 ```json
 {
@@ -1214,183 +1213,23 @@ Populate the CMS with sample content for testing and demonstration.
 Create `/cms/scripts/seed-demo-data.ts`:
 
 ```typescript
-import { getStrapiData } from '@/lib/strapi';
-import Image from 'next/image';
-import Link from 'next/link';
+import fetch from "node-fetch";
 
-export interface BlogPostProps {
-  post: any; // Would be BlogPost type from generated types
-}
+const STRAPI_URL = "http://localhost:1337";
 
-export async function BlogPostCard({ post }: BlogPostProps) {
-  const { attributes } = post;
-
-  return (
-    <article className="border rounded-lg overflow-hidden hover:shadow-lg transition">
-      {attributes.featuredImage?.data && (
-        <Image
-          src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${attributes.featuredImage.data.attributes.url}`}
-          alt={attributes.featuredImage.data.attributes.alternativeText || attributes.title}
-          width={400}
-          height={300}
-          className="w-full h-48 object-cover"
-        />
-      )}
-      <div className="p-4">
-        <h3 className="text-xl font-bold mb-2">{attributes.title}</h3>
-        <p className="text-gray-600 mb-3">{attributes.excerpt}</p>
-
-        <div className="flex items-center gap-2 mb-3">
-          {attributes.author?.data && (
-            <span className="text-sm text-gray-500">
-              By {attributes.author.data.attributes.name}
-            </span>
-          )}
-          {attributes.publishedAt && (
-            <time className="text-sm text-gray-500">
-              {new Date(attributes.publishedAt).toLocaleDateString()}
-            </time>
-          )}
-        </div>
-
-        {attributes.tags?.data?.length > 0 && (
-          <div className="flex gap-2 mb-3">
-            {attributes.tags.data.map((tag: any) => (
-              <span key={tag.id} className="text-xs bg-gray-100 px-2 py-1 rounded">
-                {tag.attributes.name}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <Link href={`/blog/${attributes.slug}`} className="text-blue-600 hover:underline">
-          Read more →
-        </Link>
-      </div>
-    </article>
-  );
-}
-
-export async function BlogPostDetail({ slug }: { slug: string }) {
-  const { data } = await getStrapiData(`/api/blog-posts?filters[slug][$eq]=${slug}&populate=*`);
-
-  if (!data?.[0]) return null;
-
-  const post = data[0];
-  const { attributes } = post;
-
-  return (
-    <article className="max-w-2xl mx-auto">
-      <header className="mb-8">
-        <h1 className="text-4xl font-bold mb-4">{attributes.title}</h1>
-
-        <div className="flex items-center gap-4 text-gray-600 mb-6">
-          {attributes.author?.data && (
-            <div>
-              <p className="font-semibold">{attributes.author.data.attributes.name}</p>
-              <p className="text-sm">{attributes.author.data.attributes.role}</p>
-            </div>
-          )}
-          {attributes.publishedAt && (
-            <time>{new Date(attributes.publishedAt).toLocaleDateString()}</time>
-          )}
-        </div>
-
-        {attributes.featuredImage?.data && (
-          <Image
-            src={`${process.env.NEXT_PUBLIC_STRAPI_URL}${attributes.featuredImage.data.attributes.url}`}
-            alt={attributes.title}
-            width={800}
-            height={400}
-            className="w-full rounded-lg mb-8"
-          />
-        )}
-      </header>
-
-      <div className="prose prose-lg max-w-none" dangerouslySetInnerHTML={{ __html: attributes.body }} />
-
-      {attributes.tags?.data?.length > 0 && (
-        <footer className="mt-8 pt-8 border-t">
-          <p className="text-sm text-gray-600 mb-2">Tags:</p>
-          <div className="flex gap-2">
-            {attributes.tags.data.map((tag: any) => (
-              <Link
-                key={tag.id}
-                href={`/blog?tag=${tag.attributes.slug}`}
-                className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded text-sm"
-              >
-                {tag.attributes.name}
-              </Link>
-            ))}
-          </div>
-        </footer>
-      )}
-    </article>
-  );
+async function postEntry(path: string, data: Record<string, unknown>) {
+  const res = await fetch(`${STRAPI_URL}${path}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ data }),
+  });
+  return res.json();
 }
 ```
 
-### Page Components
+### Frontend Boundary
 
-Create `frontend/src/app/blog/page.tsx`:
-
-```typescript
-import { getStrapiData } from '@/lib/strapi';
-import { BlogPostCard } from '@/components/BlogPost';
-
-export const metadata = {
-  title: 'Blog',
-  description: 'Latest articles and insights'
-};
-
-export default async function BlogIndex() {
-  const { data: posts } = await getStrapiData(
-    '/api/blog-posts?pagination[pageSize]=10&populate=author,tags,featuredImage&sort=-publishedAt&filters[status][$eq]=published'
-  );
-
-  return (
-    <main className="max-w-6xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">Blog</h1>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {posts.map((post: any) => (
-          <BlogPostCard key={post.id} post={post} />
-        ))}
-      </div>
-    </main>
-  );
-}
-```
-
-Create `frontend/src/app/blog/[slug]/page.tsx`:
-
-```typescript
-import { BlogPostDetail } from '@/components/BlogPost';
-
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  return <BlogPostDetail slug={params.slug} />;
-}
-```
-
-### Repeat for All Components
-
-Generate components for:
-
-- TeamMember (list + detail)
-- Feature (card + featured section)
-- Testimonial (carousel)
-- Project (portfolio grid + detail)
-- HomePage
-- AboutPage
-- PricingPage
-
-Each component must:
-
-- Fetch data from Strapi API using `getStrapiData()`
-- Handle image display with `next/image`
-- Include TypeScript types from generated Strapi types
-- Use Tailwind CSS for styling
-- Follow Next.js App Router conventions
+Do not generate any Next.js pages, React components, or frontend scaffold in this CMS prompt. The frontend is managed separately.
 
 ```typescript
 import fetch from "node-fetch";
@@ -1469,7 +1308,7 @@ seedDemoData().catch(console.error);
 ### Run the Seed Script
 
 ```bash
-cd /cms
+cd output/<site>/cms
 npm install node-fetch  # if not already installed
 node scripts/seed-demo-data.ts
 ```
@@ -1477,7 +1316,7 @@ node scripts/seed-demo-data.ts
 Or create an admin user manually:
 
 ```bash
-cd /cms
+cd output/<site>/cms
 npm run strapi -- admin:create-user \
   --firstname=Admin \
   --lastname=User \
@@ -1490,7 +1329,7 @@ npm run strapi -- admin:create-user \
 ### Start Strapi Development Server
 
 ```bash
-cd /cms
+cd output/<site>/cms
 npm run develop
 ```
 
@@ -1554,7 +1393,7 @@ Before declaring the CMS setup complete:
 - [ ] All relationships configured correctly (BlogPost → Author, Tags, etc.)
 - [ ] Sample/demo content created in Strapi
 - [ ] All API endpoints respond correctly to queries
-- [ ] Media upload works (test upload an image to `/cms/public/uploads/`)
+- [ ] Media upload works (test upload an image to `output/<site>/cms/public/uploads/`)
 - [ ] TypeScript has no errors (`npx tsc --noEmit`)
 - [ ] API populated with demo data (at least 1 BlogPost, 1 TeamMember, etc.)
 - [ ] GraphQL schema generated and accessible
@@ -1571,13 +1410,80 @@ Report:
 - Total fields: X
 - Schema files created: X
 - Demo content items: X
-- CMS project path: `/cms`
-- Documentation path: `/cms/docs/`
+- CMS project path: `output/<site>/cms`
+- Documentation path: `output/<site>/cms/docs/`
 - Admin URL: http://localhost:1337/admin
 - API base URL: http://localhost:1337/api
 - GraphQL endpoint: http://localhost:1337/graphql
 - Any limitations or manual setup required
-- Next steps for frontend integration (if applicable)
+- API handoff notes for external frontend integration (if applicable)
+- Endpoint manifest for frontend consumption:
+  - `output/<site>/cms/docs/api-spec/endpoint-manifest.json`
+
+## Endpoint Manifest Contract (Required)
+
+To prevent frontend integration mismatches (example: frontend expecting `/api/recipes` while CMS exposes a different route), always generate a machine-readable endpoint manifest.
+
+Create:
+- `output/<site>/cms/docs/api-spec/endpoint-manifest.json`
+
+Minimum structure:
+
+```json
+{
+  "baseUrl": "http://localhost:1337",
+  "apiPrefix": "/api",
+  "primaryContent": {
+    "list": "/api/recipes",
+    "detailBySlug": "/api/recipes?filters[slug][$eq]={slug}&populate=*"
+  },
+  "contentTypes": [
+    {
+      "name": "recipe",
+      "collection": "recipes",
+      "listEndpoint": "/api/recipes",
+      "singleEndpointPattern": "/api/recipes/{id}",
+      "supportsSlugFilter": true
+    }
+  ],
+  "healthcheck": {
+    "admin": "/admin",
+    "api": "/api"
+  }
+}
+```
+
+Rules:
+- Manifest values must match actual generated CMS routes.
+- If route names differ from defaults, manifest must reflect the true routes.
+- Frontend prompt/agent must consume this manifest instead of guessing endpoint names.
+
+## Mandatory Run-and-Fix Loop (Do Not Skip)
+
+Do not declare CMS generation complete until runtime verification passes.
+
+Required runtime checks:
+
+1. Start CMS (`npm run develop`) and keep it running.
+2. Verify:
+   - Admin UI loads
+   - API base responds
+   - At least one core endpoint returns valid data
+Failure policy for runtime issues:
+
+- Any startup/build/runtime failure is a blocking defect.
+- You must fix and retry in a loop:
+  1) capture error
+  2) patch config/code/env/deps
+  3) restart services
+  4) re-validate
+- Repeat until CMS runs successfully and API contracts are validated.
+
+Completion is NOT allowed if:
+
+- CMS cannot stay up
+- admin/API endpoints fail
+- unresolved runtime errors remain in logs
 
 ## Notes & Best Practices
 
@@ -1596,7 +1502,7 @@ Report:
 
 ## Environment Setup for Different Stages
 
-### Development (`/cms/.env`)
+### Development (`output/<site>/cms/.env`)
 
 ```env
 NODE_ENV=development
@@ -1606,7 +1512,7 @@ DATABASE_CLIENT=sqlite
 DATABASE_FILENAME=.tmp/data.db
 ```
 
-### Production Template (`/cms/.env.production`)
+### Production Template (`output/<site>/cms/.env.production`)
 
 ```env
 NODE_ENV=production
@@ -1620,16 +1526,6 @@ DATABASE_USERNAME=<your-user>
 DATABASE_PASSWORD=<your-password>
 ```
 
-## Frontend Integration (Optional Next Step)
+## Frontend Integration (Handoff Only)
 
-Once `/cms` is set up and running, you can create a frontend consumer:
-
-```bash
-# Create a Next.js frontend that consumes the CMS
-npx create-next-app@latest frontend --typescript --app --tailwind
-
-# In frontend, create API client pointing to /cms:
-# src/lib/strapi.ts with NEXT_PUBLIC_STRAPI_URL=http://localhost:1337
-```
-
-See the Strapi Schema Generator Phase 5 for frontend component templates.
+Frontend implementation is out of scope for this prompt. Provide API endpoint + payload contracts so a separately managed frontend can integrate cleanly.

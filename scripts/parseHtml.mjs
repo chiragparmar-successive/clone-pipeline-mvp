@@ -1,10 +1,6 @@
 import fs from "./fs.mjs";
 import path from "path";
 import { getProjectPaths } from "./utils.mjs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 function cleanHtml(html) {
   return (

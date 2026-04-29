@@ -32,7 +32,7 @@ Rules:
 
 ## Output Contract
 
-Build a complete output package under `output/<site>/`:
+Build a complete output package under `output/<site>/` where `<site>` is derived from the website name/hostname:
 - `docs/` for extraction/build artifacts
 - `frontend/` runnable Next.js app
 - `cms/` runnable Strapi app
@@ -148,9 +148,9 @@ Return:
 - Input summary (`website_url`, sitemap mode used)
 - Step-by-step status table
 - Output paths:
-  - `output/<site>/docs`
-  - `output/<site>/frontend`
-  - `output/<site>/cms`
+- `output/<site>/docs`
+- `output/<site>/frontend`
+- `output/<site>/cms`
 - Run commands:
   - `cd output/<site>/cms && npm run develop`
   - `cd output/<site>/frontend && npm run dev`

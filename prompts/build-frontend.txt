@@ -1,7 +1,7 @@
 ---
 name: clone-website
-description: Reverse-engineer and clone a website from one page URL plus its sitemap URL — extracts assets, CSS, and content section-by-section and proactively dispatches parallel builder agents in worktrees as it goes. Use this whenever the user wants to clone, replicate, rebuild, reverse-engineer, or copy any website. Also triggers on phrases like "make a copy of this site", "rebuild this page", "pixel-perfect clone". Provide exactly two arguments: target URL and sitemap URL.
-argument-hint: "<url> <sitemap-url>"
+description: Reverse-engineer and clone a website from one page URL plus an optional sitemap URL — extracts assets, CSS, and content section-by-section and proactively dispatches parallel builder agents in worktrees as it goes. Use this whenever the user wants to clone, replicate, rebuild, reverse-engineer, or copy any website. Also triggers on phrases like "make a copy of this site", "rebuild this page", "pixel-perfect clone". Requires one argument (target URL) and accepts an optional second argument (sitemap URL).
+argument-hint: "<url> [sitemap-url]"
 user-invocable: true
 ---
 
@@ -9,30 +9,31 @@ user-invocable: true
 
 You are about to reverse-engineer and rebuild the site defined by **$ARGUMENTS** as a pixel-perfect multi-page clone.
 
-This skill requires EXACTLY TWO arguments:
+This skill requires one argument and accepts an optional second argument:
 
 - `$ARGUMENTS[0]` = Canonical page URL on the target site (used as origin and baseline)
-- `$ARGUMENTS[1]` = Sitemap URL
+- `$ARGUMENTS[1]` = Sitemap URL (optional)
 
-If argument count is not exactly 2, stop and ask the user to provide:
-`clone-website <url> <sitemap-url>`
+If argument count is not 1 or 2, stop and ask the user to provide:
+`clone-website <url> [sitemap-url]`
 
 Execution contract:
 
-1. Fetch and parse the sitemap URL
-2. Extract all page URLs from sitemap (and nested sitemaps, if present)
-3. Keep only in-scope HTML pages on the same origin
-4. Remove duplicates, query-tracking variants, and non-HTML/document links
-5. Treat EACH remaining URL as a required page in the clone
-6. Repeat the full pipeline (recon -> extract -> build -> assemble) for EACH page
-7. Reuse shared components (navbar, footer, design tokens, icons) across pages
-8. Build a complete multi-page output; do not stop after a single page
+1. Reuse existing crawl artifacts first (`output/<site>/docs/pages.json`, `output/<site>/docs/html/`, `output/<site>/docs/parsed-html/`, and screenshots)
+2. Only if required artifacts are missing, fetch and parse the sitemap URL
+3. Extract all page URLs from sitemap (and nested sitemaps, if present)
+4. Keep only in-scope HTML pages on the same origin
+5. Remove duplicates, query-tracking variants, and non-HTML/document links
+6. Treat EACH remaining URL as a required page in the clone
+7. Repeat the full pipeline (recon -> extract -> build -> assemble) for EACH page
+8. Reuse shared components (navbar, footer, design tokens, icons) across pages
+9. Build a complete multi-page output; do not stop after a single page
 
 This is not a two-phase process (inspect then build). You are a **foreman walking the job site** — as you inspect each section of the page, you write a detailed specification to a file, then hand that file to a specialist builder agent with everything they need. Extraction and construction happen in parallel, but extraction is meticulous and produces auditable artifacts.
 
 ## Scope Defaults
 
-The target scope is all in-scope pages discovered from `$ARGUMENTS[1]` (sitemap URL). `$ARGUMENTS[0]` defines canonical domain/origin and acts as the seed page for initial foundation extraction. Unless the user specifies otherwise, use these defaults:
+The target scope is all in-scope pages discovered from `$ARGUMENTS[1]` when provided (sitemap URL), otherwise from discovered sitemap endpoints or controlled in-site crawl from `$ARGUMENTS[0]`. `$ARGUMENTS[0]` defines canonical domain/origin and acts as the seed page for initial foundation extraction. Unless the user specifies otherwise, use these defaults:
 
 - **Fidelity level:** Pixel-perfect — exact match in colors, spacing, typography, animations
 - **In scope:** Visual layout and styling, component structure and interactions, responsive design, mock data for demo purposes
@@ -43,21 +44,22 @@ If the user provides additional instructions (specific fidelity level, customiza
 
 ## Pre-Flight
 
-1. **Browser automation is required.** Check for available browser MCP tools (Chrome MCP, Playwright MCP, Browserbase MCP, Puppeteer MCP, etc.). Use whichever is available — if multiple exist, prefer Chrome MCP. If none are detected, ask the user which browser tool they have and how to connect it. This skill cannot work without browser automation.
+1. **Browser automation is preferred, artifact-first execution is required.** Reuse existing artifacts in `output/<site>/docs/` first (`pages.json`, raw HTML, parsed HTML, desktop/mobile screenshots). If artifacts are missing or stale, use available browser tooling (MCP browser tools or local Playwright scripts) to refresh only the missing pieces. Do not fail solely because browser MCP is unavailable when artifacts are sufficient.
 2. Validate arguments strictly:
    - `$ARGUMENTS[0]` must be a valid URL
-   - `$ARGUMENTS[1]` must be a valid sitemap URL
-   - Both must be reachable via browser MCP
-   - Sitemap pages must resolve to the same hostname as `$ARGUMENTS[0]` unless user explicitly allows cross-domain pages
-3. Always create a NEW dedicated project under the `/project` directory:
-   `project/<project-name>/`
-   where `<project-name>` should be a stable slug derived from the target hostname (or user-provided name).
-   Use:
-   `npx create-next-app@latest project/<project-name>`
-   Ensure: TypeScript + Tailwind + App Router
-4. Set `project/<project-name>/` as the working directory for all subsequent commands, files, docs, scripts, and artifacts.
+   - If present, `$ARGUMENTS[1]` must be a valid sitemap URL
+   - `$ARGUMENTS[0]` must be reachable via available tooling; `$ARGUMENTS[1]` must be reachable only if provided
+   - If sitemap URLs are used, sitemap pages must resolve to the same hostname as `$ARGUMENTS[0]` unless user explicitly allows cross-domain pages
+3. Use a dedicated frontend project under:
+   `output/<site>/frontend/`
+   where `<site>` is a stable slug derived from the website name/hostname.
+   - If it does not exist, scaffold it with:
+     `npx create-next-app@latest output/<site>/frontend`
+     Ensure: TypeScript + Tailwind + App Router
+   - If it already exists, continue in place and apply non-destructive updates.
+4. Set `output/<site>/frontend/` as the working directory for all subsequent commands, files, docs, scripts, and artifacts.
 5. Verify the base project builds: `npm run build`. The Next.js + shadcn/ui + Tailwind v4 scaffold should already be in place. If not, tell the user to set it up first.
-6. Create the output directories inside `project/<project-name>/`:
+6. Create the output directories inside `output/<site>/frontend/`:
    - `docs/research/`
    - `docs/research/components/`
    - `docs/research/pages/`
@@ -71,6 +73,11 @@ If the user provides additional instructions (specific fidelity level, customiza
    - `/about` -> `src/app/about/page.tsx`
    - `/products/item-a` -> `src/app/products/item-a/page.tsx`
      Keep this mapping in `docs/research/SITEMAP_PAGE_MAP.md`.
+8. Artifact-first rule (mandatory):
+   - Read existing crawl/parse artifacts from `output/<site>/docs/` before opening pages in browser MCP.
+   - Reuse existing full-page screenshots from `output/<site>/docs/screenshots/desktop/` and `output/<site>/docs/screenshots/mobile/`.
+   - Reuse existing HTML from `output/<site>/docs/html/` and parsed HTML from `output/<site>/docs/parsed-html/`.
+   - Only capture new screenshots or fetch live HTML when required files are missing or clearly unusable.
 
 ## Guiding Principles
 
@@ -169,15 +176,16 @@ Treat performance, static generation, and SEO as first-class requirements for ev
 
 Navigate first to `$ARGUMENTS[0]` with browser MCP, then perform per-page recon for every URL discovered from the sitemap.
 
-### Screenshots
+### Screenshots (Reuse First)
 
-- Take **full-page screenshots** at desktop (1440px) and mobile (390px) viewports
-- Save to `docs/design-references/` with descriptive names
+- Reuse existing full-page screenshots from `output/<site>/docs/screenshots/desktop/` and `output/<site>/docs/screenshots/mobile/`
+- Copy/link the reused references into `docs/design-references/` with descriptive names
+- Only take new full-page screenshots if a required page/viewport screenshot is missing
 - These are your master reference — builders will receive section-specific crops/screenshots later
 
 ### Global Extraction
 
-Extract these from the page before doing anything else:
+Extract these from existing artifacts before doing anything else. Use live browser extraction only for gaps:
 
 **Fonts** — Inspect `<link>` tags for Google Fonts or self-hosted fonts. Check computed `font-family` on key elements (headings, body, code, labels). Document every family, weight, and style actually used. Configure them in `src/app/layout.tsx` using `next/font/google` or `next/font/local`.
 
@@ -217,7 +225,7 @@ This is a dedicated pass AFTER screenshots and BEFORE anything else. Its purpose
 - Mobile: 390px
 - At each width, note which sections change layout (column → stack, sidebar disappears, etc.) and at approximately which breakpoint the change occurs.
 
-Save findings inside `project/<project-name>/` to:
+Save findings inside `output/<site>/frontend/` to:
 
 - `docs/research/BEHAVIORS-global.md` for global/shared behavior
 - `docs/research/pages/<route-slug>/BEHAVIORS.md` for page-specific behavior
@@ -233,7 +241,7 @@ Map out every distinct section of the page from top to bottom. Give each a worki
 - Dependencies between sections (e.g., a floating nav that overlays everything)
 - **The interaction model** of each section (static, click-driven, scroll-driven, time-driven)
 
-Save this inside `project/<project-name>/` as:
+Save this inside `output/<site>/frontend/` as:
 
 - `docs/research/PAGE_TOPOLOGY-global.md` for shared shell/layout
 - `docs/research/pages/<route-slug>/PAGE_TOPOLOGY.md` for each page
@@ -311,7 +319,7 @@ This is the core loop. For each page from the sitemap, and for each section in t
 
 For each section, use browser MCP to extract everything:
 
-1. **Screenshot** the section in isolation (scroll to it, screenshot the viewport). Save to `docs/design-references/`.
+1. **Section screenshot**: first crop/reuse from existing full-page screenshots; only capture a new section screenshot if crop quality is insufficient. Save to `docs/design-references/`.
 
 2. **Extract CSS** for every element in the section. Use the extraction script below — don't hand-measure individual properties. Run it once per component container and capture the full output:
 
@@ -451,7 +459,7 @@ Record the diff explicitly: "Property X changes from VALUE_A to VALUE_B, trigger
 
 ### Step 2: Write the Component Spec File
 
-For each section (or sub-component, if you're breaking it up), create a spec file in `docs/research/components/` under `project/<project-name>/`. This is NOT optional — every builder must have a corresponding spec file.
+For each section (or sub-component, if you're breaking it up), create a spec file in `docs/research/components/` under `output/<site>/frontend/`. This is NOT optional — every builder must have a corresponding spec file.
 
 **File path:** `docs/research/components/<route-slug>--<component-name>.spec.md`
 
@@ -568,7 +576,7 @@ The extract → spec → dispatch → merge cycle continues until all sections a
 
 ## Phase 4: Multi-Page Assembly
 
-After all sections are built and merged, wire everything together for EVERY sitemap page inside `project/<project-name>/`:
+After all sections are built and merged, wire everything together for EVERY sitemap page inside `output/<site>/frontend/`:
 
 - Build shared shell/layout components in `src/components/shared/`
 - Build page-specific sections in `src/components/pages/<route-slug>/`
@@ -597,7 +605,7 @@ Only after this visual QA pass across all sitemap pages is the clone complete.
 
 ## Next.js Static Generation and SEO Checklist
 
-Apply this checklist across all routes in `project/<project-name>/`:
+Apply this checklist across all routes in `output/<site>/frontend/`:
 
 1. **Default to static output for page routes.**
    - Keep route pages as Server Components unless browser-only APIs are required.
@@ -671,6 +679,23 @@ For each page/route component, define the exact query shape needed by that route
 
 Use deterministic query strings so debugging is reproducible.
 
+### 3.1 Endpoint handshake with CMS (Required)
+
+Never assume a fixed endpoint such as `/api/pages` or `/api/recipes`.
+
+Before wiring frontend fetches, the agent must:
+
+1. Read CMS endpoint manifest (if present), for example:
+   - `cms/docs/api-spec/endpoint-manifest.json`
+2. If no manifest exists, discover actual content endpoints from CMS schema/routes.
+3. Pick the canonical primary listing endpoint and detail endpoint.
+4. Store this mapping in frontend docs (for auditability), e.g.:
+   - `frontend/docs/CMS_ENDPOINT_MAP.md`
+
+Hard rule:
+- Frontend API client must use discovered endpoints, not guessed endpoints.
+- Any hardcoded endpoint must be validated against a live CMS response before completion.
+
 ### 4. Draft/publish and preview handling
 
 Support Strapi draft/publish aware fetching:
@@ -720,8 +745,10 @@ Implement:
 - non-200 response fallback
 - empty `data` fallback
 - relation/media null checks
+- endpoint-not-found (`404`) fallback with endpoint remap attempt if alternate known endpoint exists
 
 Render useful empty states for editors (e.g., "No content found in CMS yet").
+Do not surface raw internal errors like "Failed to fetch recipes: Not Found" to end users.
 
 ### 9. Revalidation and caching policy
 
@@ -746,6 +773,8 @@ Before completion, verify all:
 - [ ] Build succeeds with CMS online and seeded content
 - [ ] At least one list query and one detail query validated against live CMS
 - [ ] Preview/draft behavior either implemented or explicitly documented
+- [ ] No user-facing 404 fetch message from wrong endpoint naming
+- [ ] Endpoint mapping file exists and matches live CMS routes
 
 ## Pre-Dispatch Checklist
 
@@ -792,5 +821,39 @@ When done, report:
 - Total assets downloaded (images, videos, SVGs, fonts)
 - Build status (`npm run build` result)
 - Visual QA results by page (any remaining discrepancies)
-- Project output path (`project/<project-name>/`)
+- Project output path (`output/<site>/frontend/`)
 - Any known gaps or limitations
+
+## Mandatory Runtime Verification Gate (CMS + Frontend)
+
+Do not mark the task complete until both projects are actually running without blocking runtime errors.
+
+Required execution sequence:
+
+1. Start CMS first and verify it is healthy.
+   - Run CMS dev server (`npm run develop` or project-equivalent)
+   - Confirm process stays alive
+   - Confirm CMS URL is reachable
+   - Confirm at least one critical endpoint responds (example: `/api/pages`)
+
+2. Start frontend second and verify it is healthy.
+   - Run frontend dev server (`npm run dev`)
+   - Confirm process stays alive
+   - Confirm frontend URL is reachable
+   - Confirm the homepage renders without fatal/runtime crash
+
+3. Validate frontend-to-CMS integration while both are running.
+   - Confirm frontend fetches from CMS base URL env
+   - Confirm data-bound sections render
+   - Confirm offline/error fallback still works if CMS is temporarily unavailable
+
+4. If ANY error occurs (build error, startup error, runtime error, API error):
+   - Diagnose root cause from logs
+   - Apply fix
+   - Restart impacted service(s)
+   - Re-test end-to-end
+   - Repeat until successful
+
+Hard rule:
+- Never stop at "build passed". Success requires both servers running and integration verified.
+- Never declare completion while unresolved runtime/server errors remain.

@@ -38,11 +38,17 @@ If no sitemap:
 
 `/website-builder website_url=https://example.com`
 
+Run crawl + parse + docs validation directly:
+
+`npm run pipeline -- https://example.com https://example.com/sitemap.xml`
+
 ## Output Folder
 
-For `https://example.com`, generated files are in:
+Generated files are placed in:
 
-`output/example.com/`
+`output/<site>/`
+
+`<site>` is a stable slug from the website name/hostname (for example, `example.com`).
 
 Folder layout:
 - `docs/` (crawl + build artifacts such as screenshots, html, parsed html, and JSON files)

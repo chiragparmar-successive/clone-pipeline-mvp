@@ -4,13 +4,8 @@ import pLimit from "p-limit";
 import { chromium } from "playwright";
 import path from "path";
 import { getProjectPaths } from "./utils.mjs";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const CONCURRENCY = 5;
-const MAX_DISCOVERED_LINKS = 30;
 const MAX_CRAWL_PAGES = 120;
 const VIEWPORTS = [
   { name: "desktop", width: 1440, height: 2200 },
@@ -64,7 +59,9 @@ async function getSitemapUrls(browser, sitemapUrl) {
       return nestedResults.flat();
     }
 
-    throw new Error("Invalid sitemap format: could not find urlset or sitemapindex");
+    throw new Error(
+      "Invalid sitemap format: could not find urlset or sitemapindex",
+    );
   }
 
   return readSitemap(sitemapUrl);
@@ -72,15 +69,61 @@ async function getSitemapUrls(browser, sitemapUrl) {
 
 function normalizeUrl(baseUrl, rawUrl) {
   try {
-    return new URL(rawUrl, baseUrl).toString().split("#")[0];
+    const normalized = new URL(rawUrl, baseUrl);
+    normalized.hash = "";
+    return normalized.toString();
   } catch {
     return null;
   }
 }
 
+function isCrawlableUrl(url, hostname) {
+  const candidate = new URL(url);
+  return (
+    candidate.hostname === hostname &&
+    !/\.(pdf|zip|jpg|jpeg|png|webp|gif|svg|mp4|webm)$/i.test(
+      candidate.pathname,
+    )
+  );
+}
+
+function canonicalizeUrl(url) {
+  const candidate = new URL(url);
+  // Remove common tracking params to reduce duplicate pages in crawl output.
+  const trackingParams = [
+    "utm_source",
+    "utm_medium",
+    "utm_campaign",
+    "utm_term",
+    "utm_content",
+    "gclid",
+    "fbclid",
+  ];
+  for (const key of trackingParams) {
+    candidate.searchParams.delete(key);
+  }
+  return candidate.toString().replace(/\/$/, "");
+}
+
+function getCrawlTargets(websiteUrl, urls) {
+  const base = new URL(websiteUrl);
+  const deduped = new Set();
+
+  for (const rawUrl of urls) {
+    const normalized = normalizeUrl(websiteUrl, rawUrl);
+    if (!normalized) continue;
+    if (!isCrawlableUrl(normalized, base.hostname)) continue;
+    deduped.add(canonicalizeUrl(normalized));
+    if (deduped.size >= MAX_CRAWL_PAGES) break;
+  }
+
+  return Array.from(deduped);
+}
+
 async function discoverLinksFromHomepage(browser, websiteUrl) {
   const base = new URL(websiteUrl);
   const queue = [websiteUrl];
+  const queued = new Set(queue);
   const seen = new Set();
   const discovered = [];
 
@@ -101,19 +144,17 @@ async function discoverLinksFromHomepage(browser, websiteUrl) {
       const normalized = links
         .map((link) => normalizeUrl(current, link))
         .filter(Boolean)
-        .filter((link) => {
-          const candidate = new URL(link);
-          return (
-            candidate.hostname === base.hostname &&
-            !/\.(pdf|zip|jpg|jpeg|png|webp|gif|svg|mp4|webm)$/i.test(
-              candidate.pathname,
-            )
-          );
-        });
+        .filter((link) => isCrawlableUrl(link, base.hostname))
+        .map(canonicalizeUrl);
 
       for (const link of normalized) {
-        if (!seen.has(link) && !queue.includes(link) && queue.length < MAX_CRAWL_PAGES) {
+        if (
+          !seen.has(link) &&
+          !queued.has(link) &&
+          queue.length < MAX_CRAWL_PAGES
+        ) {
           queue.push(link);
+          queued.add(link);
         }
       }
     } catch (error) {
@@ -123,7 +164,7 @@ async function discoverLinksFromHomepage(browser, websiteUrl) {
     }
   }
 
-  return discovered.slice(0, MAX_CRAWL_PAGES);
+  return getCrawlTargets(websiteUrl, discovered);
 }
 
 async function ensureDirs(htmlDir, screenshotDir) {
@@ -155,7 +196,10 @@ async function scrollToLoadFullPage(page) {
     };
 
     const scrollElementSlowly = async (el) => {
-      const step = Math.max(180, Math.floor((el.clientHeight || window.innerHeight) * 0.65));
+      const step = Math.max(
+        180,
+        Math.floor((el.clientHeight || window.innerHeight) * 0.65),
+      );
       let y = 0;
       while (y < el.scrollHeight) {
         el.scrollTo(0, y);
@@ -243,32 +287,33 @@ async function captureTrulyFullPageScreenshot(page, targetPath) {
   const contentWidth = Math.ceil(metrics.contentSize.width);
   const contentHeight = Math.ceil(metrics.contentSize.height);
 
-  await client.send("Page.captureScreenshot", {
-    format: "png",
-    captureBeyondViewport: true,
-    clip: {
-      x: 0,
-      y: 0,
-      width: contentWidth,
-      height: contentHeight,
-      scale: 1,
-    },
-  }).then(async ({ data }) => {
-    await fs.outputFile(targetPath, Buffer.from(data, "base64"));
-  });
+  await client
+    .send("Page.captureScreenshot", {
+      format: "png",
+      captureBeyondViewport: true,
+      clip: {
+        x: 0,
+        y: 0,
+        width: contentWidth,
+        height: contentHeight,
+        scale: 1,
+      },
+    })
+    .then(async ({ data }) => {
+      await fs.outputFile(targetPath, Buffer.from(data, "base64"));
+    });
 }
 
 async function captureScreenshots(page, screenshotDir, slug) {
   const screenshotPaths = {};
   for (const viewport of VIEWPORTS) {
-    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await page.setViewportSize({
+      width: viewport.width,
+      height: viewport.height,
+    });
     await page.waitForTimeout(300);
     await scrollToLoadFullPage(page);
-    const targetPath = path.join(
-      screenshotDir,
-      viewport.name,
-      `${slug}.png`,
-    );
+    const targetPath = path.join(screenshotDir, viewport.name, `${slug}.png`);
     await captureTrulyFullPageScreenshot(page, targetPath);
     screenshotPaths[viewport.name] = targetPath;
   }
@@ -332,7 +377,8 @@ async function main() {
   let urls = [];
   if (sitemapUrl) {
     try {
-      urls = await getSitemapUrls(browser, sitemapUrl);
+      const sitemapUrls = await getSitemapUrls(browser, sitemapUrl);
+      urls = getCrawlTargets(websiteUrl, sitemapUrls);
       console.log(`Found ${urls.length} URLs in sitemap`);
     } catch (err) {
       console.warn(
@@ -343,7 +389,9 @@ async function main() {
 
   if (!urls.length) {
     urls = await discoverLinksFromHomepage(browser, websiteUrl);
-    console.log(`Discovered ${urls.length} internal links from recursive discovery`);
+    console.log(
+      `Discovered ${urls.length} internal links from recursive discovery`,
+    );
   }
 
   const limit = pLimit(CONCURRENCY);
