@@ -36,7 +36,7 @@ This is not a two-phase process (inspect then build). You are a **foreman walkin
 The target scope is all in-scope pages discovered from `$ARGUMENTS[1]` when provided (sitemap URL), otherwise from discovered sitemap endpoints or controlled in-site crawl from `$ARGUMENTS[0]`. `$ARGUMENTS[0]` defines canonical domain/origin and acts as the seed page for initial foundation extraction. Unless the user specifies otherwise, use these defaults:
 
 - **Fidelity level:** Pixel-perfect — exact match in colors, spacing, typography, animations
-- **In scope:** Visual layout and styling, component structure and interactions, responsive design, mock data for demo purposes
+- **In scope:** Visual layout and styling, component structure and interactions, responsive design, CMS-backed real content rendering
 - **Out of scope:** Real backend / database, authentication
 - **Customization:** None — pure emulation
 
@@ -696,6 +696,17 @@ Hard rule:
 - Frontend API client must use discovered endpoints, not guessed endpoints.
 - Any hardcoded endpoint must be validated against a live CMS response before completion.
 
+### 3.2 Section contract handshake with CMS (Required)
+
+Before implementing route renderers, read:
+
+- `cms/docs/api-spec/section-map.json`
+
+Hard rule:
+- Route rendering must follow CMS section order and section keys from this file.
+- Frontend must not invent or reorder sections unless an explicit fallback is documented.
+- Each section key must map to a dedicated component under `src/components/pages/<route-slug>/` or `src/components/shared/`.
+
 ### 4. Draft/publish and preview handling
 
 Support Strapi draft/publish aware fetching:
@@ -775,6 +786,8 @@ Before completion, verify all:
 - [ ] Preview/draft behavior either implemented or explicitly documented
 - [ ] No user-facing 404 fetch message from wrong endpoint naming
 - [ ] Endpoint mapping file exists and matches live CMS routes
+- [ ] `section-map.json` is consumed and route section order matches CMS contract
+- [ ] Per-route section components exist (no single giant JSX file rendering all sections inline)
 
 ## Pre-Dispatch Checklist
 
@@ -857,3 +870,16 @@ Required execution sequence:
 Hard rule:
 - Never stop at "build passed". Success requires both servers running and integration verified.
 - Never declare completion while unresolved runtime/server errors remain.
+- Never declare completion if frontend is mostly monolithic pages with no reusable section components.
+
+## Frontend Architecture Hard Gate (Do Not Skip)
+
+To avoid "empty shell pages" and non-componentized output, the frontend must satisfy all:
+
+1. `src/components/` contains reusable shared and page section components.
+2. Every major route renders by composing components, not by embedding all markup directly in `app/**/page.tsx`.
+3. At least one shared shell component exists (`Header`, `Footer`, or equivalent) and is reused.
+4. Component count must be proportional to complexity; if a multi-section route has fewer than 3 section components, treat as suspicious and re-audit.
+
+Failure policy:
+- If these checks fail, refactor into proper components before declaring completion.

@@ -107,8 +107,9 @@ Required artifacts:
 
 Validate:
 - env contract (`NEXT_PUBLIC_STRAPI_URL`)
-- endpoint contract (`GET /api/pages`)
+- endpoint contract (consume `cms/docs/api-spec/endpoint-manifest.json`, do not assume fixed routes)
 - graceful fallback behavior for CMS downtime
+- section contract alignment (`cms/docs/api-spec/section-map.json` is consumed by frontend)
 
 ### Phase 6: Auto-Fix Loop
 
@@ -122,6 +123,8 @@ Apply deterministic fixes for known failures and rerun impacted checks.
 - `cms` is a real bootstrapped app (not partial scaffold).
 - `frontend` is a real bootstrapped app (not partial scaffold).
 - frontend fetch logic is fail-safe (no hard crash if CMS unavailable).
+- frontend has real reusable components under `src/components/` (not only monolithic `app/*/page.tsx` files).
+- CMS + frontend both run, and at least one list route + one detail route render real CMS-backed data.
 
 ## Failure Policy
 

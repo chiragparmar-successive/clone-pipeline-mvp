@@ -30,6 +30,7 @@ Execution contract:
 9. Populate seed data/demo content for testing the CMS
 10. Document the schema and API structure
 11. Verify the CMS is fully operational with a running development server
+12. Generate frontend-consumable contracts for endpoint and section alignment
 
 This is not a simple data dump. You are a **content architect** — as you inspect each page, you extract its underlying data model, identify reusable components, normalize relationships, and design a schema that scales beyond the source site.
 
@@ -205,6 +206,23 @@ Every React component needs specific data. Design API responses to match — inc
 If the "blog list" component needs title, excerpt, author name, and thumbnail, the endpoint should return exactly those fields (plus relationships). Don't return the entire post body.
 
 Use Strapi's `populate` strategy to specify which relations and fields are included per request.
+
+### 8. **Screenshot-Faithful Section Modeling (Critical)**
+
+The CMS model must represent what is visibly present in screenshots and parsed HTML, not only generic blog-like entities.
+
+Mandatory rules:
+
+- For each major page section detected from artifacts (hero, feature grid, testimonials, pricing, FAQ, CTA, footer blocks), model a corresponding structured section entry.
+- Use dynamic-zone/component-based section modeling so frontend render order can match the source website.
+- Do not collapse entire pages into one `richtext` blob when the source has multiple structured blocks.
+- Preserve exact section order and repeated card ordering in data.
+- Preserve media metadata (`alt`, caption, and dimensions when available).
+
+Hard fail if:
+
+- The schema cannot represent the visible section structure from screenshots.
+- Multiple major visual sections are forced into unstructured text fields.
 
 ## Phase 1: Reconnaissance
 
@@ -1457,6 +1475,40 @@ Rules:
 - Manifest values must match actual generated CMS routes.
 - If route names differ from defaults, manifest must reflect the true routes.
 - Frontend prompt/agent must consume this manifest instead of guessing endpoint names.
+
+## Section Map Contract (Required)
+
+To prevent CMS/frontend content-structure drift, always generate a machine-readable section contract derived from crawl artifacts.
+
+Create:
+- `output/<site>/cms/docs/api-spec/section-map.json`
+
+Minimum structure:
+
+```json
+{
+  "version": 1,
+  "routes": [
+    {
+      "path": "/",
+      "pageType": "home-page",
+      "sections": [
+        {
+          "key": "hero",
+          "component": "sections.hero",
+          "order": 1,
+          "dataShape": ["headline", "subheadline", "cta", "media"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+Rules:
+- `routes[].sections[].order` must match visible order from screenshots and parsed HTML.
+- `component` values must map to real Strapi components/content fields.
+- Frontend generation must consume this file and must not invent section names/order.
 
 ## Mandatory Run-and-Fix Loop (Do Not Skip)
 
